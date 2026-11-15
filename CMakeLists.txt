@@ -41,7 +41,14 @@ target_include_directories(glad PUBLIC external/glad/include)
 
 add_executable(cabinetDesign
     src/main.cpp
+    src/Shader.cpp
+    src/Mesh.cpp
 )
 
 target_link_libraries(cabinetDesign PRIVATE glad glfw)
-target_include_directories(cabinetDesign PRIVATE ${stb_SOURCE_DIR})
+target_include_directories(cabinetDesign 
+    PRIVATE 
+        src
+        include
+        ${stb_SOURCE_DIR}
+)
