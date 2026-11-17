@@ -5,6 +5,8 @@
 #include <vector>
 #include "Mesh.h"
 #include "Shader.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 
 
@@ -97,6 +99,29 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
+
+        // Model
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // model = glm::rotate(model, (float)glfwGetTime(),
+        //                     glm::vec3(0.5f, 1.0f, 0.0f));
+
+        // View - moves camera back
+        glm::mat4 view = glm::mat4(1.0f);
+        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+        // Projection 45 degree field of view
+        glm::mat4 projection = glm::perspective(
+            glm::radians(45.0f),
+            (float)fbWidth / (float)fbHeight,
+            0.1f, // near clip plane
+            100.0f // far clip plane
+        );
+
+        shader.setMat4("model", model);
+        shader.setMat4("view", view);
+        shader.setMat4("projection", projection);
+
         triangle.draw();
 
         glfwSwapBuffers(window);
