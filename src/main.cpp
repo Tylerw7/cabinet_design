@@ -103,8 +103,8 @@ int main()
         // Model
         glm::mat4 model = glm::mat4(1.0f);
 
-        // model = glm::rotate(model, (float)glfwGetTime(),
-        //                     glm::vec3(0.5f, 1.0f, 0.0f));
+        model = glm::rotate(model, (float)glfwGetTime(),
+                            glm::vec3(0.5f, 1.0f, 0.0f));
 
         // View - moves camera back
         glm::mat4 view = glm::mat4(1.0f);
