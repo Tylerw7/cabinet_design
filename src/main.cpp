@@ -7,6 +7,64 @@
 #include "Shader.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "Camera.h"
+
+// ****************************************************
+// Hook ups for mouse
+// ****************************************************
+struct InputState
+{
+    Camera* camera = nullptr;
+
+    bool   orbiting = false;   // left button held
+    bool   panning  = false;   // right button held
+    double lastX = 0.0;
+    double lastY = 0.0;
+};
+
+static void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
+{
+    auto* input = static_cast<InputState*>(glfwGetWindowUserPointer(window));
+    if (!input) return;
+
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+        input->orbiting = (action == GLFW_PRESS);
+    if (button == GLFW_MOUSE_BUTTON_RIGHT)
+        input->panning = (action == GLFW_PRESS);
+
+    // Record where the drag started to avoid a jump on first move.
+    glfwGetCursorPos(window, &input->lastX, &input->lastY);
+}
+
+static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
+{
+    auto* input = static_cast<InputState*>(glfwGetWindowUserPointer(window));
+    if (!input || !input->camera) return;
+
+    float dx = static_cast<float>(xpos - input->lastX);
+    float dy = static_cast<float>(ypos - input->lastY);
+    input->lastX = xpos;
+    input->lastY = ypos;
+
+    if (input->orbiting)
+    {
+        // Drag right → orbit right; drag up → pitch up.
+        input->camera->orbit(dx * 0.3f, -dy * 0.3f);
+    }
+    else if (input->panning)
+    {
+        input->camera->pan(-dx * 0.01f, dy * 0.01f);
+    }
+}
+
+static void scrollCallback(GLFWwindow* window, double, double yoffset)
+{
+    auto* input = static_cast<InputState*>(glfwGetWindowUserPointer(window));
+    if (!input || !input->camera) return;
+
+    // Scroll up → zoom in (decrease distance).
+    input->camera->zoom(static_cast<float>(-yoffset) * 0.5f);
+}
 
 
 
@@ -93,6 +151,14 @@ int main()
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
+
+
+    // Camera
+    Camera camera;
+
+
+
+
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.15f, 0.18f, 0.22f, 1.0f);
@@ -103,19 +169,15 @@ int main()
         // Model
         glm::mat4 model = glm::mat4(1.0f);
 
-        model = glm::rotate(model, (float)glfwGetTime(),
-                            glm::vec3(0.5f, 1.0f, 0.0f));
+        glm::mat4 view = camera.getViewMatrix();
 
-        // View - moves camera back
-        glm::mat4 view = glm::mat4(1.0f);
-        view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-        // Projection 45 degree field of view
+        int w, h;
+        glfwGetFramebufferSize(window, &w, &h);
         glm::mat4 projection = glm::perspective(
             glm::radians(45.0f),
-            (float)fbWidth / (float)fbHeight,
-            0.1f, // near clip plane
-            100.0f // far clip plane
+            (float)w / (float)h,
+            0.1f,
+            100.0f
         );
 
         shader.setMat4("model", model);

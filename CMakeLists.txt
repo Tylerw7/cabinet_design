@@ -51,6 +51,7 @@ add_executable(cabinetDesign
     src/main.cpp
     src/Shader.cpp
     src/Mesh.cpp
+    src/Camera.cpp
 )
 
 target_link_libraries(cabinetDesign PRIVATE glad glfw glm::glm)
