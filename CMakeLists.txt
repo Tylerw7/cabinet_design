@@ -33,6 +33,14 @@ FetchContent_Declare(
     GIT_TAG 1.0.1
 )
 
+# IMGUI
+# Dear ImGui
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.91.5
+)
+
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
@@ -40,6 +48,7 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 FetchContent_MakeAvailable(stb)
 FetchContent_MakeAvailable(glm)
+FetchContent_MakeAvailable(imgui)
 
 # GLAD
 add_library(glad STATIC
@@ -54,7 +63,25 @@ add_executable(cabinetDesign
     src/Camera.cpp
 )
 
-target_link_libraries(cabinetDesign PRIVATE glad glfw glm::glm)
+# ImGui doesn't provide a CMake target — we compile its sources ourselves.
+add_library(imgui STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui
+    PUBLIC
+        ${imgui_SOURCE_DIR}
+        ${imgui_SOURCE_DIR}/backends
+)
+
+target_link_libraries(imgui PUBLIC glfw)
+
+target_link_libraries(cabinetDesign PRIVATE glad glfw glm::glm imgui)
 target_include_directories(cabinetDesign 
     PRIVATE 
         src

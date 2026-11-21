@@ -9,6 +9,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Camera.h"
 
+// IMGUI
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 // ****************************************************
 // Hook ups for mouse
 // ****************************************************
@@ -24,6 +29,9 @@ struct InputState
 
 static void mouseButtonCallback(GLFWwindow* window, int button, int action, int)
 {
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
+
     auto* input = static_cast<InputState*>(glfwGetWindowUserPointer(window));
     if (!input) return;
 
@@ -46,6 +54,9 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
     input->lastX = xpos;
     input->lastY = ypos;
 
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
+
     if (input->orbiting)
     {
         // Drag right → orbit right; drag up → pitch up.
@@ -59,6 +70,9 @@ static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos)
 
 static void scrollCallback(GLFWwindow* window, double, double yoffset)
 {
+    if (ImGui::GetIO().WantCaptureMouse)
+        return;
+
     auto* input = static_cast<InputState*>(glfwGetWindowUserPointer(window));
     if (!input || !input->camera) return;
 
@@ -156,11 +170,44 @@ int main()
     // Camera
     Camera camera;
 
+    // Mouse Inputs
+    InputState input;
+    input.camera = &camera;
+    glfwSetWindowUserPointer(window, &input);
+
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetCursorPosCallback(window, cursorPosCallback);
+    glfwSetScrollCallback(window, scrollCallback);
+
+    // IMGUI SETUP
+        // --- ImGui setup ---
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
 
 
 
     while (!glfwWindowShouldClose(window))
     {
+
+        glfwPollEvents();
+
+        // Start a new ImGui frame.
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        // --- Define UI for this frame ---
+        ImGui::Begin("Cabinet Designer");
+        ImGui::Text("Phase 1 foundation online.");
+        ImGui::Text("Camera and viewport active.");
+        ImGui::End();
+
+
         glClearColor(0.15f, 0.18f, 0.22f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -186,9 +233,16 @@ int main()
 
         triangle.draw();
 
+        // --- Render ImGui on top ---
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         glfwSwapBuffers(window);
-        glfwPollEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();
