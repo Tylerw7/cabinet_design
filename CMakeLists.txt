@@ -61,6 +61,7 @@ add_executable(cabinetDesign
     src/Shader.cpp
     src/Mesh.cpp
     src/Camera.cpp
+    src/Grid.cpp
 )
 
 # ImGui doesn't provide a CMake target — we compile its sources ourselves.
